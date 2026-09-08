@@ -16,8 +16,10 @@ src/berlinduck/
   ingest.py       pipeline: load -> chunk -> embed -> upsert to Qdrant
   retriever.py    Retriever: embed a query, search Qdrant, return SearchHits
   demo.py         CLI entry point
+backend/app.py    FastAPI JSON API over the retriever (POST /api/search, /api/ask)
+frontend/         React app (planned) -- talks to the API over HTTP only
 conftest.py       puts src/ on sys.path for pytest (no install step)
-requirements.txt  dependencies (pip)
+requirements.txt  Python dependencies (pip)
 ```
 
 ## Setup
@@ -60,13 +62,53 @@ To use a running Qdrant server instead of the embedded one, pass
 `--qdrant-url http://localhost:6333` to both commands. If no store exists at
 `data/qdrant`, `demo.py` builds an in-memory one on the fly.
 
+## API
+
+```bash
+PYTHONPATH=src uvicorn backend.app:app --reload
+```
+
+- `POST /api/search` — ranked review hits for a query
+- `POST /api/ask` — a generated, grounded answer with citations
+- `GET  /api/health`
+- interactive docs at `/docs`, OpenAPI schema at `/openapi.json`
+
+The handlers currently return stub data; the request/response models in
+`backend/app.py` are the contract the frontend builds against. Allowed CORS
+origins default to `localhost:3000` / `localhost:5173` and can be overridden with
+`BERLINDUCK_CORS_ORIGINS`.
+
+## Architecture
+
+```
+React frontend  --HTTPS/JSON-->  FastAPI (backend/app.py)
+                                   |-- berlinduck: embed + search
+                                   |-- Qdrant (embedded or server)
+                                   `-- Claude (answer generation, /api/ask)
+```
+
+All search and RAG logic is Python and server-side. The frontend only calls the
+JSON API — it never touches embeddings, Qdrant, or the model. The contract
+between them is `backend/app.py`'s Pydantic models, published as OpenAPI at
+`/openapi.json`; the frontend generates its TypeScript types from that.
+
 ## Tech stack
 
+**Backend**
+
+- [FastAPI](https://fastapi.tiangolo.com/) + [Uvicorn](https://www.uvicorn.org/) — JSON API
 - [Sentence Transformers](https://www.sbert.net/) — text embeddings (`all-MiniLM-L6-v2`)
 - [Qdrant](https://qdrant.tech/) — vector database (embedded or server), cosine distance
 - [NumPy](https://numpy.org/) — cosine similarity reference implementation
 - [Hugging Face Datasets](https://huggingface.co/docs/datasets/) — hotel review dataset
 - [pandas](https://pandas.pydata.org/) — filtering and data cleaning
+
+**Frontend** (planned)
+
+- [React](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
+- [Tailwind CSS](https://tailwindcss.com/) — styling
+- [TanStack Query](https://tanstack.com/query) — data fetching / caching against the API
+- types generated from the backend's OpenAPI schema
 
 ## Embedding Model
 
