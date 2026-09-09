@@ -4,25 +4,6 @@ A semantic search engine for Paris hotel reviews, implemented in Python 3.
 
 Given a query like *"An affordable hotel with a view of the Eiffel Tower"*, the code embeds the text and compares it against hotel review embeddings using similarity search, then returns the top-k most relevant matches.
 
-## Project layout
-
-```
-src/bonnuit/
-  similarity.py   L2 normalization + a from-scratch cosine-search reference impl (NumPy)
-  chunking.py     split review text into overlapping windows
-  embeddings.py   Embedder: SentenceTransformer wrapper, normalized vectors
-  vectorstore.py  QdrantStore: embedded (in-memory / on-disk) or a Qdrant server
-  data.py         load + clean the hotel-review dataset
-  ingest.py       pipeline: load -> chunk -> embed -> upsert to Qdrant
-  retriever.py    Retriever: embed a query, search Qdrant, return SearchHits
-  demo.py         CLI entry point
-backend/app.py    FastAPI app: instance, CORS, route handlers
-backend/schemas.py  Pydantic request/response models -- the API contract
-frontend/         React app (planned) -- talks to the API over HTTP only
-conftest.py       puts src/ on sys.path for pytest (no install step)
-requirements.txt  Python dependencies (pip)
-```
-
 ## Setup
 
 Requires **Python 3.11+**. Dependencies are listed in `requirements.txt` and
@@ -135,4 +116,5 @@ This repo will still grow
 - Drop the `--locality` / `locality` plumbing (single-city, Paris)
 - Create a React search page against the API
 - Add the RAG generation step (`generator.py`) behind `/api/ask`
+- Build the front-end MVP
 
