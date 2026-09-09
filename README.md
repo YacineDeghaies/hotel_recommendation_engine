@@ -1,6 +1,6 @@
 # BonNuit
 
-A semantic search engine for Paris hotel reviews, implemented in Python 3.
+A semantic search engine for finding Hotels in Paris, implemented as a RAG.
 
 Given a query like *"An affordable hotel with a view of the Eiffel Tower"*, the code embeds the text and compares it against hotel review embeddings using similarity search, then returns the top-k most relevant matches.
 
