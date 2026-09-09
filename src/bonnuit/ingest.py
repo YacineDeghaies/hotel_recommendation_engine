@@ -3,20 +3,20 @@
 Run once, offline, before serving queries:
 
     # embedded Qdrant, persisted to ./data/qdrant
-    python -m berlinduck.ingest --locality Paris
+    python -m bonnuit.ingest --locality Paris
 
     # against a running Qdrant server
-    python -m berlinduck.ingest --locality Paris --qdrant-url http://localhost:6333
+    python -m bonnuit.ingest --locality Paris --qdrant-url http://localhost:6333
 """
 
 from __future__ import annotations
 
 import argparse
 
-from berlinduck.chunking import chunk_text
-from berlinduck.data import load_reviews
-from berlinduck.embeddings import Embedder
-from berlinduck.vectorstore import DEFAULT_COLLECTION, Document, QdrantStore
+from bonnuit.chunking import chunk_text
+from bonnuit.data import load_reviews
+from bonnuit.embeddings import Embedder
+from bonnuit.vectorstore import DEFAULT_COLLECTION, Document, QdrantStore
 
 DEFAULT_QDRANT_PATH = "data/qdrant"
 

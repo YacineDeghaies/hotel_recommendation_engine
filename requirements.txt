@@ -1,8 +1,8 @@
-# BerlinDuck dependencies. Requires Python 3.11+.
+# BonNuit dependencies. Requires Python 3.11+.
 #
 # Recommended (works around old system Python, no root needed):
-#   conda create -n berlinduck python=3.11
-#   conda activate berlinduck
+#   conda create -n bonnuit python=3.11
+#   conda activate bonnuit
 #   pip install -r requirements.txt
 #
 # Or with a plain venv on a 3.11+ interpreter:
@@ -10,7 +10,7 @@
 #   pip install -r requirements.txt
 #
 # The package is not installed; run it with src/ on the path:
-#   PYTHONPATH=src python -m berlinduck.demo "..."
+#   PYTHONPATH=src python -m bonnuit.demo "..."
 # (pytest finds src/ automatically via conftest.py)
 
 # --- runtime ---

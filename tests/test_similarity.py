@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from berlinduck.similarity import top_k_cosine
+from bonnuit.similarity import top_k_cosine
 
 
 def test_ranks_by_direction_not_magnitude():

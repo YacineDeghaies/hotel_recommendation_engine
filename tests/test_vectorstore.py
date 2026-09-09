@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from berlinduck.similarity import l2_normalize
-from berlinduck.vectorstore import Document, QdrantStore
+from bonnuit.similarity import l2_normalize
+from bonnuit.vectorstore import Document, QdrantStore
 
 
 def _corpus():

@@ -1,4 +1,4 @@
-"""BerlinDuck HTTP API (FastAPI).
+"""BonNuit HTTP API (FastAPI).
 
 Run from the repo root:
 
@@ -9,7 +9,7 @@ Run from the repo root:
   its TypeScript types from this)
 
 The route handlers currently return STUB data so the frontend has a stable
-contract to build against. Swap the bodies for the real `berlinduck` retriever /
+contract to build against. Swap the bodies for the real `bonnuit` retriever /
 generator once the pipeline runs end to end -- the request/response models in
 `backend.schemas` (the contract) stay the same.
 """
@@ -36,12 +36,12 @@ API_VERSION = "0.1.0"
 # Comma-separated list of allowed browser origins. Defaults cover a Next.js dev
 # server (3000) and a Vite dev server (5173).
 CORS_ORIGINS = os.getenv(
-    "BERLINDUCK_CORS_ORIGINS",
+    "BONNUIT_CORS_ORIGINS",
     "http://localhost:3000,http://localhost:5173",
 ).split(",")
 
 app = FastAPI(
-    title="BerlinDuck API",
+    title="BonNuit API",
     version=API_VERSION,
     summary="Semantic search and RAG over hotel reviews.",
 )
@@ -68,7 +68,7 @@ def health() -> HealthResponse:
 def search(req: SearchRequest) -> SearchResponse:
     """Return the reviews most similar to `query`.
 
-    STUB: replace with `berlinduck.retriever.Retriever(...).search(req.query, k=req.k)`
+    STUB: replace with `bonnuit.retriever.Retriever(...).search(req.query, k=req.k)`
     and map each `SearchHit` to a `ReviewHit`.
     """
     stub = [
@@ -93,7 +93,7 @@ def ask(req: AskRequest) -> AskResponse:
     """Retrieve context, then return a generated answer grounded in it.
 
     STUB: retrieve top-k reviews, then call the (not yet written)
-    `berlinduck.generator` which prompts Claude and returns an answer + citations.
+    `bonnuit.generator` which prompts Claude and returns an answer + citations.
     """
     return AskResponse(
         query=req.query,

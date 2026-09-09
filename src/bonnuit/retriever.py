@@ -5,8 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from berlinduck.embeddings import Embedder
-from berlinduck.vectorstore import DEFAULT_COLLECTION, Document, QdrantStore
+from bonnuit.embeddings import Embedder
+from bonnuit.vectorstore import DEFAULT_COLLECTION, Document, QdrantStore
 
 
 @dataclass(frozen=True)
@@ -31,7 +31,7 @@ class Retriever:
         path: str | None = "data/qdrant",
         embedder: Embedder | None = None,
     ) -> "Retriever":
-        """Attach to an existing Qdrant collection built by :mod:`berlinduck.ingest`."""
+        """Attach to an existing Qdrant collection built by :mod:`bonnuit.ingest`."""
         embedder = embedder or Embedder()
         store = QdrantStore(
             dimension=embedder.dimension,

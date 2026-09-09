@@ -1,8 +1,8 @@
-"""Request/response models for the BerlinDuck API -- the frontend/backend contract.
+"""Request/response models for the BonNuit API -- the frontend/backend contract.
 
 FastAPI turns these into the OpenAPI schema at ``/openapi.json``; the frontend
 generates its TypeScript types from that. Keep these separate from the internal
-``berlinduck`` dataclasses so the wire format can stay stable while the
+``bonnuit`` dataclasses so the wire format can stay stable while the
 implementation changes. Any edit here affects both sides -- review accordingly.
 """
 

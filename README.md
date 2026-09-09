@@ -1,13 +1,13 @@
-# BerlinDuck
+# BonNuit
 
-A semantic search engine for hotel reviews, implemented in Python 3.
+A semantic search engine for Paris hotel reviews, implemented in Python 3.
 
 Given a query like *"An affordable hotel with a view of the Eiffel Tower"*, the code embeds the text and compares it against hotel review embeddings using similarity search, then returns the top-k most relevant matches.
 
 ## Project layout
 
 ```
-src/berlinduck/
+src/bonnuit/
   similarity.py   L2 normalization + a from-scratch cosine-search reference impl (NumPy)
   chunking.py     split review text into overlapping windows
   embeddings.py   Embedder: SentenceTransformer wrapper, normalized vectors
@@ -30,8 +30,8 @@ installed with pip. If the system Python is older (common on shared servers),
 get 3.11 via conda without needing root:
 
 ```bash
-conda create -n berlinduck python=3.11
-conda activate berlinduck
+conda create -n bonnuit python=3.11
+conda activate bonnuit
 pip install -r requirements.txt
 ```
 
@@ -50,10 +50,10 @@ The package is not installed — run it with `src/` on the import path
 
 ```bash
 # 1. ingest: embed reviews and upsert them into an embedded Qdrant at ./data/qdrant
-PYTHONPATH=src python -m berlinduck.ingest --locality Paris
+PYTHONPATH=src python -m bonnuit.ingest --locality Paris
 
 # 2. query it
-PYTHONPATH=src python -m berlinduck.demo "a quiet hotel near the Louvre" -k 5
+PYTHONPATH=src python -m bonnuit.demo "a quiet hotel near the Louvre" -k 5
 
 # tests (similarity + chunking + vector store; need only numpy + qdrant-client)
 pytest
@@ -75,22 +75,22 @@ PYTHONPATH=src uvicorn backend.app:app --reload
 - interactive docs at `/docs`, OpenAPI schema at `/openapi.json`
 
 The handlers currently return stub data; the request/response models in
-`backend/app.py` are the contract the frontend builds against. Allowed CORS
+`backend/schemas.py` are the contract the frontend builds against. Allowed CORS
 origins default to `localhost:3000` / `localhost:5173` and can be overridden with
-`BERLINDUCK_CORS_ORIGINS`.
+`BONNUIT_CORS_ORIGINS`.
 
 ## Architecture
 
 ```
 React frontend  --HTTPS/JSON-->  FastAPI (backend/app.py)
-                                   |-- berlinduck: embed + search
+                                   |-- bonnuit: embed + search
                                    |-- Qdrant (embedded or server)
                                    `-- Claude (answer generation, /api/ask)
 ```
 
 All search and RAG logic is Python and server-side. The frontend only calls the
 JSON API — it never touches embeddings, Qdrant, or the model. The contract
-between them is `backend/app.py`'s Pydantic models, published as OpenAPI at
+between them is `backend/schemas.py`'s Pydantic models, published as OpenAPI at
 `/openapi.json`; the frontend generates its TypeScript types from that.
 
 ## Tech stack
@@ -128,4 +128,11 @@ This model converts text into dense vector embeddings suitable for semantic sear
 Reviews come from the [traversaal-ai-hackathon/hotel_datasets](https://huggingface.co/datasets/traversaal-ai-hackathon/hotel_datasets) dataset on Hugging Face.
 
 This repo will still grow
+
+## Todos
+- Run the pipeline end to end on the Paris data; add an ingest test
+- Wire `/api/search` to the real retriever (drop the stub)
+- Drop the `--locality` / `locality` plumbing (single-city, Paris)
+- Create a React search page against the API
+- Add the RAG generation step (`generator.py`) behind `/api/ask`
 
