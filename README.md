@@ -16,7 +16,8 @@ src/berlinduck/
   ingest.py       pipeline: load -> chunk -> embed -> upsert to Qdrant
   retriever.py    Retriever: embed a query, search Qdrant, return SearchHits
   demo.py         CLI entry point
-backend/app.py    FastAPI JSON API over the retriever (POST /api/search, /api/ask)
+backend/app.py    FastAPI app: instance, CORS, route handlers
+backend/schemas.py  Pydantic request/response models -- the API contract
 frontend/         React app (planned) -- talks to the API over HTTP only
 conftest.py       puts src/ on sys.path for pytest (no install step)
 requirements.txt  Python dependencies (pip)

@@ -10,8 +10,8 @@ Run from the repo root:
 
 The route handlers currently return STUB data so the frontend has a stable
 contract to build against. Swap the bodies for the real `berlinduck` retriever /
-generator once the pipeline runs end to end -- the request/response models
-(the contract) stay the same.
+generator once the pipeline runs end to end -- the request/response models in
+`backend.schemas` (the contract) stay the same.
 """
 
 from __future__ import annotations
@@ -20,7 +20,16 @@ import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+
+from backend.schemas import (
+    AskRequest,
+    AskResponse,
+    Citation,
+    HealthResponse,
+    ReviewHit,
+    SearchRequest,
+    SearchResponse,
+)
 
 API_VERSION = "0.1.0"
 
@@ -44,50 +53,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-# --------------------------------------------------------------------------- #
-# Schemas (the frontend/backend contract)
-# --------------------------------------------------------------------------- #
-
-class SearchRequest(BaseModel):
-    query: str = Field(..., min_length=1, examples=["a quiet hotel near the Louvre"])
-    k: int = Field(5, ge=1, le=50, description="number of review hits to return")
-    locality: str | None = Field(None, examples=["Paris"])
-
-
-class ReviewHit(BaseModel):
-    hotel_name: str
-    review: str
-    score: float = Field(..., description="cosine similarity, 0..1")
-    locality: str | None = None
-
-
-class SearchResponse(BaseModel):
-    query: str
-    hits: list[ReviewHit]
-
-
-class AskRequest(BaseModel):
-    query: str = Field(..., min_length=1, examples=["family hotel near Sacré-Cœur, walkable"])
-    k: int = Field(8, ge=1, le=50, description="reviews to retrieve as context")
-    locality: str | None = Field(None, examples=["Paris"])
-
-
-class Citation(BaseModel):
-    hotel_name: str
-    review: str
-
-
-class AskResponse(BaseModel):
-    query: str
-    answer: str
-    citations: list[Citation]
-
-
-class HealthResponse(BaseModel):
-    status: str
-    version: str
 
 
 # --------------------------------------------------------------------------- #
