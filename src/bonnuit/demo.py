@@ -13,8 +13,8 @@ import argparse
 from pathlib import Path
 
 from bonnuit.data import load_reviews
-from bonnuit.retriever import Retriever
-from bonnuit.vectorstore import DEFAULT_COLLECTION, Document
+from bonnuit.search.retriever import Retriever
+from bonnuit.search.vectorstore import DEFAULT_COLLECTION, Document
 
 DEFAULT_QUERY = "An affordable hotel with a view of the Eiffel Tower"
 DEFAULT_QDRANT_PATH = "data/qdrant"

@@ -2,7 +2,7 @@
 
 Run from the repo root:
 
-    PYTHONPATH=src uvicorn backend.app:app --reload
+    uvicorn bonnuit.api.app:app --reload
 
 - Interactive docs:      http://localhost:8000/docs
 - Machine-readable spec:  http://localhost:8000/openapi.json  (frontend generates
@@ -11,7 +11,7 @@ Run from the repo root:
 The route handlers currently return STUB data so the frontend has a stable
 contract to build against. Swap the bodies for the real `bonnuit` retriever /
 generator once the pipeline runs end to end -- the request/response models in
-`backend.schemas` (the contract) stay the same.
+`bonnuit.api.schemas` (the contract) stay the same.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.schemas import (
+from bonnuit.api.schemas import (
     AskRequest,
     AskResponse,
     Citation,
@@ -68,7 +68,8 @@ def health() -> HealthResponse:
 def search(req: SearchRequest) -> SearchResponse:
     """Return the reviews most similar to `query`.
 
-    STUB: replace with `bonnuit.retriever.Retriever(...).search(req.query, k=req.k)`
+    STUB: replace with
+    `bonnuit.search.retriever.Retriever(...).search(req.query, k=req.k)`
     and map each `SearchHit` to a `ReviewHit`.
     """
     stub = [

@@ -1,6 +1,6 @@
 import pytest
 
-from bonnuit.chunking import chunk_text
+from bonnuit.search.chunking import chunk_text
 
 
 def test_short_text_is_single_chunk():

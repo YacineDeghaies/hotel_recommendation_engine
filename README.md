@@ -6,14 +6,14 @@ Given a query like *"An affordable hotel with a view of the Eiffel Tower"*, the 
 
 ## Setup
 
-Requires **Python 3.11+**. Dependencies are listed in `requirements.txt` and
+Requires **Python 3.11+**. Dependencies are declared in `pyproject.toml` and
 installed with pip. If the system Python is older (common on shared servers),
 get 3.11 via conda without needing root:
 
 ```bash
 conda create -n bonnuit python=3.11
 conda activate bonnuit
-pip install -r requirements.txt
+pip install -e ".[dev]"
 ```
 
 Or, on a machine that already has a 3.11+ interpreter:
@@ -21,20 +21,19 @@ Or, on a machine that already has a 3.11+ interpreter:
 ```bash
 python3.11 -m venv .venv && source .venv/bin/activate
 pip install --upgrade pip
-pip install -r requirements.txt
+pip install -e ".[dev]"
 ```
 
-The package is not installed — run it with `src/` on the import path
-(`PYTHONPATH=src`). `pytest` handles this itself via `conftest.py`.
+The editable install provides the `bonnuit-ingest` and `bonnuit-search` commands.
 
 ## Usage
 
 ```bash
 # 1. ingest: embed reviews and upsert them into an embedded Qdrant at ./data/qdrant
-PYTHONPATH=src python -m bonnuit.ingest --locality Paris
+bonnuit-ingest --locality Paris
 
 # 2. query it
-PYTHONPATH=src python -m bonnuit.demo "a quiet hotel near the Louvre" -k 5
+bonnuit-search "a quiet hotel near the Louvre" -k 5
 
 # tests (similarity + chunking + vector store; need only numpy + qdrant-client)
 pytest
@@ -47,7 +46,7 @@ To use a running Qdrant server instead of the embedded one, pass
 ## API
 
 ```bash
-PYTHONPATH=src uvicorn backend.app:app --reload
+uvicorn bonnuit.api.app:app --reload
 ```
 
 - `POST /api/search` — ranked review hits for a query
@@ -56,14 +55,14 @@ PYTHONPATH=src uvicorn backend.app:app --reload
 - interactive docs at `/docs`, OpenAPI schema at `/openapi.json`
 
 The handlers currently return stub data; the request/response models in
-`backend/schemas.py` are the contract the frontend builds against. Allowed CORS
+`src/bonnuit/api/schemas.py` is the contract the frontend builds against. Allowed CORS
 origins default to `localhost:3000` / `localhost:5173` and can be overridden with
 `BONNUIT_CORS_ORIGINS`.
 
 ## Architecture
 
 ```
-React frontend  --HTTPS/JSON-->  FastAPI (backend/app.py)
+React frontend  --HTTPS/JSON-->  FastAPI (bonnuit/api/app.py)
                                    |-- bonnuit: embed + search
                                    |-- Qdrant (embedded or server)
                                    `-- Claude (answer generation, /api/ask)
@@ -71,7 +70,7 @@ React frontend  --HTTPS/JSON-->  FastAPI (backend/app.py)
 
 All search and RAG logic is Python and server-side. The frontend only calls the
 JSON API — it never touches embeddings, Qdrant, or the model. The contract
-between them is `backend/schemas.py`'s Pydantic models, published as OpenAPI at
+between them is `bonnuit/api/schemas.py`'s Pydantic models, published as OpenAPI at
 `/openapi.json`; the frontend generates its TypeScript types from that.
 
 ## Tech stack
@@ -85,12 +84,22 @@ between them is `backend/schemas.py`'s Pydantic models, published as OpenAPI at
 - [Hugging Face Datasets](https://huggingface.co/docs/datasets/) — hotel review dataset
 - [pandas](https://pandas.pydata.org/) — filtering and data cleaning
 
-**Frontend** (planned)
+**Frontend**
 
-- [React](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
-- [Tailwind CSS](https://tailwindcss.com/) — styling
-- [TanStack Query](https://tanstack.com/query) — data fetching / caching against the API
-- types generated from the backend's OpenAPI schema
+- [React](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/) + [Vite](https://vite.dev/)
+- [TanStack Query](https://tanstack.com/query) — API request state
+- responsive CSS with accessible form and result states
+
+Run the frontend after starting the API:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Vite serves the app at `http://localhost:5173` and proxies `/api` requests to
+FastAPI at `http://localhost:8000`.
 
 ## Embedding Model
 
@@ -114,7 +123,5 @@ This repo will still grow
 - Run the pipeline end to end on the Paris data; add an ingest test
 - Wire `/api/search` to the real retriever (drop the stub)
 - Drop the `--locality` / `locality` plumbing (single-city, Paris)
-- Create a React search page against the API
 - Add the RAG generation step (`generator.py`) behind `/api/ask`
-- Build the front-end MVP
-
+- Generate frontend types from the backend OpenAPI schema

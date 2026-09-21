@@ -5,8 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from bonnuit.embeddings import Embedder
-from bonnuit.vectorstore import DEFAULT_COLLECTION, Document, QdrantStore
+from bonnuit.search.embeddings import Embedder
+from bonnuit.search.vectorstore import DEFAULT_COLLECTION, Document, QdrantStore
 
 
 @dataclass(frozen=True)

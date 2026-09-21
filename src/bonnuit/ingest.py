@@ -13,10 +13,10 @@ from __future__ import annotations
 
 import argparse
 
-from bonnuit.chunking import chunk_text
 from bonnuit.data import load_reviews
-from bonnuit.embeddings import Embedder
-from bonnuit.vectorstore import DEFAULT_COLLECTION, Document, QdrantStore
+from bonnuit.search.chunking import chunk_text
+from bonnuit.search.embeddings import Embedder
+from bonnuit.search.vectorstore import DEFAULT_COLLECTION, Document, QdrantStore
 
 DEFAULT_QDRANT_PATH = "data/qdrant"
 
@@ -72,8 +72,14 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--locality", default="Paris")
     parser.add_argument("--collection", default=DEFAULT_COLLECTION)
-    parser.add_argument("--qdrant-url", default=None, help="Qdrant server URL; overrides --qdrant-path")
-    parser.add_argument("--qdrant-path", default=DEFAULT_QDRANT_PATH, help="local embedded-Qdrant directory")
+    parser.add_argument(
+        "--qdrant-url", default=None, help="Qdrant server URL; overrides --qdrant-path"
+    )
+    parser.add_argument(
+        "--qdrant-path",
+        default=DEFAULT_QDRANT_PATH,
+        help="local embedded-Qdrant directory",
+    )
     parser.add_argument("--chunk-size", type=int, default=512)
     parser.add_argument("--overlap", type=int, default=64)
     parser.add_argument(

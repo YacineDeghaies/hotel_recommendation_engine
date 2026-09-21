@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from sentence_transformers import SentenceTransformer
 
-from bonnuit.similarity import l2_normalize
+from bonnuit.search.similarity import l2_normalize
 
 DEFAULT_MODEL = "all-MiniLM-L6-v2"
 
