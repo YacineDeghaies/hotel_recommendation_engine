@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from bonnuit.search.similarity import l2_normalize
-from bonnuit.search.vectorstore import Document, QdrantStore
+from hotel_search_engine.search.similarity import l2_normalize
+from hotel_search_engine.search.vectorstore import Document, QdrantStore
 
 
 def _corpus():
@@ -84,5 +84,7 @@ def test_persists_to_disk_and_reopens(tmp_path):
     reopened = QdrantStore(dimension=3, path=path)
     assert len(reopened) == 3
     after = reopened.search(l2_normalize(np.array([[0.0, 0.0, 1.0]]))[0], k=2)
-    assert [h.document.id for h in before] == [h.document.id for h in after]
+    # The second result is a zero-score tie, whose order Qdrant does not define.
+    assert before[0].document.id == after[0].document.id == "c"
+    assert before[0].score == pytest.approx(after[0].score)
     reopened.close()

@@ -20,7 +20,7 @@ export default function App() {
         <p className="eyebrow">PARIS, FRANCE</p>
         <h1>Find a hotel that feels right.</h1>
         <p className="intro">
-          Describe the stay you want. BonNuit searches real guest reviews for the closest matches.
+          Describe the stay you want. Hotel Search Engine searches real guest reviews for the closest matches.
         </p>
       </header>
 

@@ -5,8 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from bonnuit.search.embeddings import Embedder
-from bonnuit.search.vectorstore import DEFAULT_COLLECTION, Document, QdrantStore
+from hotel_search_engine.search.embeddings import Embedder
+from hotel_search_engine.search.vectorstore import DEFAULT_COLLECTION, Document, QdrantStore
 
 
 @dataclass(frozen=True)
@@ -30,8 +30,8 @@ class Retriever:
         url: str | None = None,
         path: str | None = "data/qdrant",
         embedder: Embedder | None = None,
-    ) -> "Retriever":
-        """Attach to an existing Qdrant collection built by :mod:`bonnuit.ingest`."""
+    ) -> Retriever:
+        """Attach to an existing Qdrant collection built by :mod:`hotel_search_engine.ingest`."""
         embedder = embedder or Embedder()
         store = QdrantStore(
             dimension=embedder.dimension,
@@ -47,7 +47,7 @@ class Retriever:
         documents: list[Document],
         embedder: Embedder | None = None,
         collection: str = DEFAULT_COLLECTION,
-    ) -> "Retriever":
+    ) -> Retriever:
         """Build an ephemeral in-memory collection (used by the CLI demo and tests)."""
         embedder = embedder or Embedder()
         store = QdrantStore(dimension=embedder.dimension, collection=collection)
@@ -55,6 +55,12 @@ class Retriever:
         return cls(store, embedder)
 
     def search(self, query: str, k: int = 5) -> list[SearchHit]:
+        query = query.strip()
+        if not query:
+            raise ValueError("query must not be blank")
+        if not isinstance(k, int) or isinstance(k, bool) or k <= 0:
+            raise ValueError("k must be a positive integer")
+
         query_embedding = self.embedder.encode_query(query)
         return [
             SearchHit(

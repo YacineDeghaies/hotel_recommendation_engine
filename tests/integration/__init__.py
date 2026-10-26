@@ -1,1 +1,1 @@
-"""Integration tests for BonNuit."""
+"""Integration tests for Hotel Search Engine."""

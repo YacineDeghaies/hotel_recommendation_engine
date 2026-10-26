@@ -3,20 +3,20 @@
 Run once, offline, before serving queries:
 
     # embedded Qdrant, persisted to ./data/qdrant
-    python -m bonnuit.ingest --locality Paris
+    python -m hotel_search_engine.ingest --locality Paris
 
     # against a running Qdrant server
-    python -m bonnuit.ingest --locality Paris --qdrant-url http://localhost:6333
+    python -m hotel_search_engine.ingest --locality Paris --qdrant-url http://localhost:6333
 """
 
 from __future__ import annotations
 
 import argparse
 
-from bonnuit.data import load_reviews
-from bonnuit.search.chunking import chunk_text
-from bonnuit.search.embeddings import Embedder
-from bonnuit.search.vectorstore import DEFAULT_COLLECTION, Document, QdrantStore
+from hotel_search_engine.data import load_reviews
+from hotel_search_engine.search.chunking import chunk_text
+from hotel_search_engine.search.embeddings import Embedder
+from hotel_search_engine.search.vectorstore import DEFAULT_COLLECTION, Document, QdrantStore
 
 DEFAULT_QDRANT_PATH = "data/qdrant"
 
@@ -37,7 +37,9 @@ def build_index(
 
     documents: list[Document] = []
     for review_id, row in df.iterrows():
-        for chunk_index, chunk in enumerate(chunk_text(row["review_text"], chunk_size, overlap)):
+        for chunk_index, chunk in enumerate(
+            chunk_text(row["review_text"], chunk_size=chunk_size, overlap_size=overlap)
+        ):
             documents.append(
                 Document(
                     id=f"{review_id}-{chunk_index}",

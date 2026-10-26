@@ -1,10 +1,10 @@
 """CLI demo: semantic search over hotel reviews.
 
-Connects to the Qdrant collection built by ``bonnuit.ingest`` if it exists,
+Connects to the Qdrant collection built by ``hotel_search_engine.ingest`` if it exists,
 otherwise builds an in-memory one on the fly:
 
-    python -m bonnuit.ingest              # optional: populate ./data/qdrant first
-    python -m bonnuit.demo "a quiet hotel near the Louvre" -k 5
+    python -m hotel_search_engine.ingest              # optional: populate ./data/qdrant first
+    python -m hotel_search_engine.demo "a quiet hotel near the Louvre" -k 5
 """
 
 from __future__ import annotations
@@ -12,9 +12,9 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from bonnuit.data import load_reviews
-from bonnuit.search.retriever import Retriever
-from bonnuit.search.vectorstore import DEFAULT_COLLECTION, Document
+from hotel_search_engine.data import load_reviews
+from hotel_search_engine.search.retriever import Retriever
+from hotel_search_engine.search.vectorstore import DEFAULT_COLLECTION, Document
 
 DEFAULT_QUERY = "An affordable hotel with a view of the Eiffel Tower"
 DEFAULT_QDRANT_PATH = "data/qdrant"

@@ -1,4 +1,4 @@
-# BonNuit
+# Hotel Search Engine
 
 A semantic search engine for finding Hotels in Paris, implemented as a RAG.
 
@@ -11,8 +11,8 @@ installed with pip. If the system Python is older (common on shared servers),
 get 3.11 via conda without needing root:
 
 ```bash
-conda create -n bonnuit python=3.11
-conda activate bonnuit
+conda create -n hotel-search-engine python=3.11
+conda activate hotel-search-engine
 pip install -e ".[dev]"
 ```
 
@@ -24,16 +24,17 @@ pip install --upgrade pip
 pip install -e ".[dev]"
 ```
 
-The editable install provides the `bonnuit-ingest` and `bonnuit-search` commands.
+The editable install provides the `hotel-search-engine-ingest` and
+`hotel-search-engine-search` commands.
 
 ## Usage
 
 ```bash
 # 1. ingest: embed reviews and upsert them into an embedded Qdrant at ./data/qdrant
-bonnuit-ingest --locality Paris
+hotel-search-engine-ingest --locality Paris
 
 # 2. query it
-bonnuit-search "a quiet hotel near the Louvre" -k 5
+hotel-search-engine-search "a quiet hotel near the Louvre" -k 5
 
 # tests (similarity + chunking + vector store; need only numpy + qdrant-client)
 pytest
@@ -46,7 +47,7 @@ To use a running Qdrant server instead of the embedded one, pass
 ## API
 
 ```bash
-uvicorn bonnuit.api.app:app --reload
+uvicorn hotel_search_engine.api.app:app --reload
 ```
 
 - `POST /api/search` — ranked review hits for a query
@@ -55,22 +56,22 @@ uvicorn bonnuit.api.app:app --reload
 - interactive docs at `/docs`, OpenAPI schema at `/openapi.json`
 
 The handlers currently return stub data; the request/response models in
-`src/bonnuit/api/schemas.py` is the contract the frontend builds against. Allowed CORS
+`src/hotel_search_engine/api/schemas.py` is the contract the frontend builds against. Allowed CORS
 origins default to `localhost:3000` / `localhost:5173` and can be overridden with
-`BONNUIT_CORS_ORIGINS`.
+`HOTEL_SEARCH_ENGINE_CORS_ORIGINS`.
 
 ## Architecture
 
 ```
-React frontend  --HTTPS/JSON-->  FastAPI (bonnuit/api/app.py)
-                                   |-- bonnuit: embed + search
+React frontend  --HTTPS/JSON-->  FastAPI (hotel_search_engine/api/app.py)
+                                   |-- hotel search engine: embed + search
                                    |-- Qdrant (embedded or server)
                                    `-- Claude (answer generation, /api/ask)
 ```
 
 All search and RAG logic is Python and server-side. The frontend only calls the
 JSON API — it never touches embeddings, Qdrant, or the model. The contract
-between them is `bonnuit/api/schemas.py`'s Pydantic models, published as OpenAPI at
+between them is `hotel_search_engine/api/schemas.py`'s Pydantic models, published as OpenAPI at
 `/openapi.json`; the frontend generates its TypeScript types from that.
 
 ## Tech stack

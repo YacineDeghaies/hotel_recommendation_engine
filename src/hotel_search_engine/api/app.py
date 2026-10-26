@@ -1,17 +1,17 @@
-"""BonNuit HTTP API (FastAPI).
+"""Hotel Search Engine HTTP API (FastAPI).
 
 Run from the repo root:
 
-    uvicorn bonnuit.api.app:app --reload
+    uvicorn hotel_search_engine.api.app:app --reload
 
 - Interactive docs:      http://localhost:8000/docs
 - Machine-readable spec:  http://localhost:8000/openapi.json  (frontend generates
   its TypeScript types from this)
 
 The route handlers currently return STUB data so the frontend has a stable
-contract to build against. Swap the bodies for the real `bonnuit` retriever /
+contract to build against. Swap the bodies for the real `hotel_search_engine` retriever /
 generator once the pipeline runs end to end -- the request/response models in
-`bonnuit.api.schemas` (the contract) stay the same.
+`hotel_search_engine.api.schemas` (the contract) stay the same.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from bonnuit.api.schemas import (
+from hotel_search_engine.api.schemas import (
     AskRequest,
     AskResponse,
     Citation,
@@ -36,12 +36,12 @@ API_VERSION = "0.1.0"
 # Comma-separated list of allowed browser origins. Defaults cover a Next.js dev
 # server (3000) and a Vite dev server (5173).
 CORS_ORIGINS = os.getenv(
-    "BONNUIT_CORS_ORIGINS",
+    "HOTEL_SEARCH_ENGINE_CORS_ORIGINS",
     "http://localhost:3000,http://localhost:5173",
 ).split(",")
 
 app = FastAPI(
-    title="BonNuit API",
+    title="Hotel Search Engine API",
     version=API_VERSION,
     summary="Semantic search and RAG over hotel reviews.",
 )
@@ -69,7 +69,7 @@ def search(req: SearchRequest) -> SearchResponse:
     """Return the reviews most similar to `query`.
 
     STUB: replace with
-    `bonnuit.search.retriever.Retriever(...).search(req.query, k=req.k)`
+    `hotel_search_engine.search.retriever.Retriever(...).search(req.query, k=req.k)`
     and map each `SearchHit` to a `ReviewHit`.
     """
     stub = [
@@ -94,7 +94,7 @@ def ask(req: AskRequest) -> AskResponse:
     """Retrieve context, then return a generated answer grounded in it.
 
     STUB: retrieve top-k reviews, then call the (not yet written)
-    `bonnuit.generator` which prompts Claude and returns an answer + citations.
+    `hotel_search_engine.generator` which prompts Claude and returns an answer + citations.
     """
     return AskResponse(
         query=req.query,

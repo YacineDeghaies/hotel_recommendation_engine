@@ -6,9 +6,10 @@ which is what both vector-store backends assume.
 
 from __future__ import annotations
 
+import numpy as np
 from sentence_transformers import SentenceTransformer
 
-from bonnuit.search.similarity import l2_normalize
+from hotel_search_engine.search.similarity import l2_normalize
 
 DEFAULT_MODEL = "all-MiniLM-L6-v2"
 
@@ -21,7 +22,10 @@ class Embedder:
 
     @property
     def dimension(self) -> int:
-        return self.model.get_sentence_embedding_dimension()
+        dimension = self.model.get_sentence_embedding_dimension()
+        if dimension is None:
+            raise ValueError("the embedding model did not report its output dimension")
+        return dimension
 
     def encode_documents(self, texts: list[str], batch_size: int = 64) -> np.ndarray:
         embeddings = self.model.encode(
