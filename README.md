@@ -71,6 +71,8 @@ to FastAPI at `http://localhost:8000`.
 ## Key features
 
 - Search across Paris hotel reviews using Natural Language
+- Hotel-level result grouping
+- Semantic Search instead of keyword search
 - Review chunking and SBERT embeddings
 - Cosine-similarity retrieval backed by Qdrant
 - Persistent local indexes with optional remote Qdrant support

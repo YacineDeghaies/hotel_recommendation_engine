@@ -30,10 +30,13 @@ from hotel_search_engine.api.schemas import (
     SearchRequest,
     SearchResponse,
 )
+from hotel_search_engine.search.aggregation import aggregate_by_hotel
 from hotel_search_engine.search.retriever import Retriever
 from hotel_search_engine.search.vectorstore import DEFAULT_COLLECTION
 
 API_VERSION = "0.1.0"
+SEARCH_CANDIDATE_MULTIPLIER = 5
+MAX_SEARCH_CANDIDATES = 250
 
 # Comma-separated list of allowed browser origins. Defaults cover a Next.js dev
 # server (3000) and a Vite dev server (5173).
@@ -81,7 +84,11 @@ def health() -> HealthResponse:
 
 @app.post("/api/search", response_model=SearchResponse, tags=["search"])
 def search(req: SearchRequest, retriever: RetrieverDependency) -> SearchResponse:
-    """Return the indexed reviews most similar to the query."""
+    """Return the best matching review from each of the top-ranked hotels."""
+    candidate_count = min(req.k * SEARCH_CANDIDATE_MULTIPLIER, MAX_SEARCH_CANDIDATES)
+    review_hits = retriever.search(req.query, k=candidate_count)
+    hotel_hits = aggregate_by_hotel(review_hits, limit=req.k)
+
     hits = [
         ReviewHit(
             hotel_name=str(hit.metadata.get("hotel_name") or "Unknown hotel"),
@@ -93,7 +100,7 @@ def search(req: SearchRequest, retriever: RetrieverDependency) -> SearchResponse
                 else None
             ),
         )
-        for hit in retriever.search(req.query, k=req.k)
+        for hit in hotel_hits
     ]
     return SearchResponse(query=req.query, hits=hits)
 
