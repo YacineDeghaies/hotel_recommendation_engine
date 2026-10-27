@@ -8,17 +8,17 @@ Run from the repo root:
 - Machine-readable spec:  http://localhost:8000/openapi.json  (frontend generates
   its TypeScript types from this)
 
-The route handlers currently return STUB data so the frontend has a stable
-contract to build against. Swap the bodies for the real `hotel_search_engine` retriever /
-generator once the pipeline runs end to end -- the request/response models in
-`hotel_search_engine.api.schemas` (the contract) stay the same.
+The search route uses the persisted Qdrant index built by
+``hotel-search-engine-ingest``. The answer-generation route remains a stub.
 """
 
 from __future__ import annotations
 
 import os
+from functools import lru_cache
+from typing import Annotated
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from hotel_search_engine.api.schemas import (
@@ -30,6 +30,8 @@ from hotel_search_engine.api.schemas import (
     SearchRequest,
     SearchResponse,
 )
+from hotel_search_engine.search.retriever import Retriever
+from hotel_search_engine.search.vectorstore import DEFAULT_COLLECTION
 
 API_VERSION = "0.1.0"
 
@@ -55,6 +57,19 @@ app.add_middleware(
 )
 
 
+@lru_cache(maxsize=1)
+def get_retriever() -> Retriever:
+    """Connect once to the configured hotel-review index."""
+    return Retriever.connect(
+        collection=os.getenv("HOTEL_SEARCH_ENGINE_COLLECTION", DEFAULT_COLLECTION),
+        url=os.getenv("HOTEL_SEARCH_ENGINE_QDRANT_URL") or None,
+        path=os.getenv("HOTEL_SEARCH_ENGINE_QDRANT_PATH", "data/qdrant"),
+    )
+
+
+RetrieverDependency = Annotated[Retriever, Depends(get_retriever)]
+
+
 # --------------------------------------------------------------------------- #
 # Routes
 # --------------------------------------------------------------------------- #
@@ -65,28 +80,22 @@ def health() -> HealthResponse:
 
 
 @app.post("/api/search", response_model=SearchResponse, tags=["search"])
-def search(req: SearchRequest) -> SearchResponse:
-    """Return the reviews most similar to `query`.
-
-    STUB: replace with
-    `hotel_search_engine.search.retriever.Retriever(...).search(req.query, k=req.k)`
-    and map each `SearchHit` to a `ReviewHit`.
-    """
-    stub = [
+def search(req: SearchRequest, retriever: RetrieverDependency) -> SearchResponse:
+    """Return the indexed reviews most similar to the query."""
+    hits = [
         ReviewHit(
-            hotel_name="Hôtel Exemple",
-            review="Quiet room at the back, ten minutes on foot from the museum.",
-            score=0.83,
-            locality=req.locality or "Paris",
-        ),
-        ReviewHit(
-            hotel_name="Hôtel Placeholder",
-            review="Good value for the location, though the walls are thin.",
-            score=0.71,
-            locality=req.locality or "Paris",
-        ),
+            hotel_name=str(hit.metadata.get("hotel_name") or "Unknown hotel"),
+            review=hit.text,
+            score=hit.score,
+            locality=(
+                str(hit.metadata["locality"])
+                if hit.metadata.get("locality") is not None
+                else None
+            ),
+        )
+        for hit in retriever.search(req.query, k=req.k)
     ]
-    return SearchResponse(query=req.query, hits=stub[: req.k])
+    return SearchResponse(query=req.query, hits=hits)
 
 
 @app.post("/api/ask", response_model=AskResponse, tags=["rag"])

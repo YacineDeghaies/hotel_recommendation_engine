@@ -1,97 +1,117 @@
 # Hotel Search Engine
 
-A semantic search engine for finding Hotels in Paris, implemented as a RAG.
+A full-stack semantic search application for discovering hotels in Paris through
+real guest reviews. Users describe the stay they want in natural language, and
+the application returns the most relevant review passages with their hotel names
+and similarity scores.
 
-Given a query like *"An affordable hotel with a view of the Eiffel Tower"*, the code embeds the text and compares it against hotel review embeddings using similarity search, then returns the top-k most relevant matches.
+> **Project status:** Core semantic search, the search API, and the React MVP are
+> implemented. The `/api/ask` generative-answer endpoint is currently a placeholder.
 
-## Setup
+## Features
 
-Requires **Python 3.11+**. Dependencies are declared in `pyproject.toml` and
-installed with pip. If the system Python is older (common on shared servers),
-get 3.11 via conda without needing root:
+- Natural-language search across Paris hotel reviews
+- Review chunking and Sentence Transformer embeddings
+- Cosine-similarity retrieval backed by Qdrant
+- Persistent local indexes with optional remote Qdrant support
+- FastAPI search endpoint with an OpenAPI contract
+- React and TypeScript frontend with loading and error states
+- CLI tools for ingestion and search
+- Unit tests for search primitives, storage, and the API
 
-```bash
-conda create -n hotel-search-engine python=3.11
-conda activate hotel-search-engine
-pip install -e ".[dev]"
+## Architecture
+
+```text
+React + TypeScript
+        |
+        | POST /api/search
+        v
+     FastAPI
+        |
+        | Embed query and retrieve nearest vectors
+        v
+      Qdrant <---- Sentence Transformers
+        |
+        v
+Ranked hotel reviews
 ```
 
-Or, on a machine that already has a 3.11+ interpreter:
+The browser communicates only with FastAPI. Dataset loading, embedding, vector
+storage, and retrieval remain in the Python backend.
+
+## Technology stack
+
+### Backend
+
+- Python 3.11+
+- FastAPI and Uvicorn
+- Sentence Transformers (`all-MiniLM-L6-v2`)
+- Qdrant
+- Hugging Face Datasets
+- pandas and NumPy
+- pytest and Ruff
+
+### Frontend
+
+- React 19
+- TypeScript
+- Vite
+- TanStack Query
+- CSS
+
+## Prerequisites
+
+- Python 3.11 or newer
+- Node.js and npm
+- Internet access during the initial dataset and model download
+
+## Quick start
+
+### 1. Install the backend
 
 ```bash
-python3.11 -m venv .venv && source .venv/bin/activate
-pip install --upgrade pip
-pip install -e ".[dev]"
+git clone https://github.com/YacineDeghaies/BonNuit.git hotel-search-engine
+cd hotel-search-engine
+
+python3.11 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -e ".[dev]"
 ```
 
-The editable install provides the `hotel-search-engine-ingest` and
-`hotel-search-engine-search` commands.
+On Windows PowerShell, activate the environment with:
 
-## Usage
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+### 2. Build the search index
 
 ```bash
-# 1. ingest: embed reviews and upsert them into an embedded Qdrant at ./data/qdrant
 hotel-search-engine-ingest --locality Paris
-
-# 2. query it
-hotel-search-engine-search "a quiet hotel near the Louvre" -k 5
-
-# tests (similarity + chunking + vector store; need only numpy + qdrant-client)
-pytest
 ```
 
-To use a running Qdrant server instead of the embedded one, pass
-`--qdrant-url http://localhost:6333` to both commands. If no store exists at
-`data/qdrant`, `demo.py` builds an in-memory one on the fly.
+This downloads the review dataset and embedding model, then writes the local
+Qdrant index to `data/qdrant`. Both downloads are cached for subsequent runs.
 
-## API
+### 3. Verify search from the command line
+
+```bash
+hotel-search-engine-search "a quiet hotel near the Louvre" -k 5
+```
+
+### 4. Start the API
 
 ```bash
 uvicorn hotel_search_engine.api.app:app --reload
 ```
 
-- `POST /api/search` — ranked review hits for a query
-- `POST /api/ask` — a generated, grounded answer with citations
-- `GET  /api/health`
-- interactive docs at `/docs`, OpenAPI schema at `/openapi.json`
+The API is available at `http://localhost:8000`. Interactive documentation is
+available at `http://localhost:8000/docs`.
 
-The handlers currently return stub data; the request/response models in
-`src/hotel_search_engine/api/schemas.py` is the contract the frontend builds against. Allowed CORS
-origins default to `localhost:3000` / `localhost:5173` and can be overridden with
-`HOTEL_SEARCH_ENGINE_CORS_ORIGINS`.
+### 5. Start the frontend
 
-## Architecture
-
-```
-React frontend  --HTTPS/JSON-->  FastAPI (hotel_search_engine/api/app.py)
-                                   |-- hotel search engine: embed + search
-                                   |-- Qdrant (embedded or server)
-                                   `-- Claude (answer generation, /api/ask)
-```
-
-All search and RAG logic is Python and server-side. The frontend only calls the
-JSON API — it never touches embeddings, Qdrant, or the model. The contract
-between them is `hotel_search_engine/api/schemas.py`'s Pydantic models, published as OpenAPI at
-`/openapi.json`; the frontend generates its TypeScript types from that.
-
-## Tech stack
-
-**Backend**
-
-- [FastAPI](https://fastapi.tiangolo.com/) + [Uvicorn](https://www.uvicorn.org/) — JSON API
-- [Sentence Transformers](https://www.sbert.net/) — text embeddings (`all-MiniLM-L6-v2`)
-- [Qdrant](https://qdrant.tech/) — vector database (embedded or server), cosine distance
-- [NumPy](https://numpy.org/) — cosine similarity reference implementation
-- [Hugging Face Datasets](https://huggingface.co/docs/datasets/) — hotel review dataset
-- [pandas](https://pandas.pydata.org/) — filtering and data cleaning
-
-**Frontend**
-
-- [React](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/) + [Vite](https://vite.dev/)
-- [TanStack Query](https://tanstack.com/query) — API request state
-- responsive CSS with accessible form and result states
-
-Run the frontend after starting the API:
+Open a second terminal:
 
 ```bash
 cd frontend
@@ -99,30 +119,106 @@ npm install
 npm run dev
 ```
 
-Vite serves the app at `http://localhost:5173` and proxies `/api` requests to
-FastAPI at `http://localhost:8000`.
+Open `http://localhost:5173`. During development, Vite proxies `/api` requests
+to FastAPI at `http://localhost:8000`.
 
-## Embedding Model
+## API
 
-The project uses:
+| Method | Endpoint | Status | Description |
+| --- | --- | --- | --- |
+| `GET` | `/api/health` | Ready | Service health and API version |
+| `POST` | `/api/search` | Ready | Ranked hotel-review matches |
+| `POST` | `/api/ask` | Placeholder | Planned grounded answer with citations |
 
-```python
+### Search example
 
-SentenceTransformer("all-MiniLM-L6-v2")
-
+```bash
+curl -X POST http://localhost:8000/api/search \
+  -H "Content-Type: application/json" \
+  -d '{"query":"a quiet hotel near the Louvre","k":5}'
 ```
 
-This model converts text into dense vector embeddings suitable for semantic search.
+Example response:
 
-## Dataset
+```json
+{
+  "query": "a quiet hotel near the Louvre",
+  "hits": [
+    {
+      "hotel_name": "Hotel Moliere",
+      "review": "One of the quietest rooms I ever slept in in Paris...",
+      "score": 0.805,
+      "locality": "Paris"
+    }
+  ]
+}
+```
 
-Reviews come from the [traversaal-ai-hackathon/hotel_datasets](https://huggingface.co/datasets/traversaal-ai-hackathon/hotel_datasets) dataset on Hugging Face.
+## Configuration
 
-This repo will still grow
+The API supports the following environment variables:
 
-## Todos
-- Run the pipeline end to end on the Paris data; add an ingest test
-- Wire `/api/search` to the real retriever (drop the stub)
-- Drop the `--locality` / `locality` plumbing (single-city, Paris)
-- Add the RAG generation step (`generator.py`) behind `/api/ask`
-- Generate frontend types from the backend OpenAPI schema
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `HOTEL_SEARCH_ENGINE_QDRANT_PATH` | `data/qdrant` | Local Qdrant index path |
+| `HOTEL_SEARCH_ENGINE_QDRANT_URL` | Unset | Remote Qdrant server URL |
+| `HOTEL_SEARCH_ENGINE_COLLECTION` | `hotel_reviews` | Qdrant collection name |
+| `HOTEL_SEARCH_ENGINE_CORS_ORIGINS` | `http://localhost:3000,http://localhost:5173` | Comma-separated browser origins |
+
+When `HOTEL_SEARCH_ENGINE_QDRANT_URL` is set, the API uses the remote server
+instead of the embedded local database.
+
+The ingestion and CLI commands also accept `--qdrant-url`, `--qdrant-path`, and
+`--collection` options. Run either command with `--help` for the full list.
+
+## Project structure
+
+```text
+hotel-search-engine/
+├── frontend/                       # React and TypeScript application
+├── src/hotel_search_engine/
+│   ├── api/                        # FastAPI routes and schemas
+│   ├── search/                     # Chunking, embeddings, retrieval, and Qdrant
+│   ├── data.py                     # Dataset loading and cleaning
+│   ├── ingest.py                   # Index-building pipeline
+│   └── demo.py                     # Search CLI
+├── tests/                          # Unit and integration tests
+├── pyproject.toml                  # Python package and tool configuration
+└── README.md
+```
+
+The installable project name is `hotel-search-engine`. Python imports use
+`hotel_search_engine` because Python module names cannot contain hyphens.
+
+## Development
+
+Run backend tests and lint checks from the repository root:
+
+```bash
+pytest
+ruff check .
+```
+
+Build the frontend:
+
+```bash
+cd frontend
+npm run build
+```
+
+## Data and embeddings
+
+Reviews come from the
+[Traversaal AI hotel dataset](https://huggingface.co/datasets/traversaal-ai-hackathon/hotel_datasets).
+The ingestion pipeline filters the dataset to Paris, removes empty reviews,
+splits reviews into overlapping passages, and embeds them with
+`sentence-transformers/all-MiniLM-L6-v2`.
+
+Generated indexes and downloaded data are not committed to Git.
+
+## Roadmap
+
+- Add an end-to-end ingestion test
+- Implement grounded answer generation behind `/api/ask`
+- Generate frontend types from the OpenAPI schema
+- Remove the remaining locality option from this Paris-only application
