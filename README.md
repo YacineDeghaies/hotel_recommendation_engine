@@ -5,72 +5,18 @@ real guest reviews. Users describe the stay they want in natural language, and
 the application returns the most relevant review passages with their hotel names
 and similarity scores.
 
-> **Project status:** Core semantic search, the search API, and the React MVP are
-> implemented. The `/api/ask` generative-answer endpoint is currently a placeholder.
+## Quick start
 
-## Features
-
-- Natural-language search across Paris hotel reviews
-- Review chunking and Sentence Transformer embeddings
-- Cosine-similarity retrieval backed by Qdrant
-- Persistent local indexes with optional remote Qdrant support
-- FastAPI search endpoint with an OpenAPI contract
-- React and TypeScript frontend with loading and error states
-- CLI tools for ingestion and search
-- Unit tests for search primitives, storage, and the API
-
-## Architecture
-
-```text
-React + TypeScript
-        |
-        | POST /api/search
-        v
-     FastAPI
-        |
-        | Embed query and retrieve nearest vectors
-        v
-      Qdrant <---- Sentence Transformers
-        |
-        v
-Ranked hotel reviews
-```
-
-The browser communicates only with FastAPI. Dataset loading, embedding, vector
-storage, and retrieval remain in the Python backend.
-
-## Technology stack
-
-### Backend
-
-- Python 3.11+
-- FastAPI and Uvicorn
-- Sentence Transformers (`all-MiniLM-L6-v2`)
-- Qdrant
-- Hugging Face Datasets
-- pandas and NumPy
-- pytest and Ruff
-
-### Frontend
-
-- React 19
-- TypeScript
-- Vite
-- TanStack Query
-- CSS
-
-## Prerequisites
+### Prerequisites
 
 - Python 3.11 or newer
 - Node.js and npm
 - Internet access during the initial dataset and model download
 
-## Quick start
-
 ### 1. Install the backend
 
 ```bash
-git clone https://github.com/YacineDeghaies/BonNuit.git hotel-search-engine
+git clone https://github.com/YacineDeghaies/hotel-search-engine.git
 cd hotel-search-engine
 
 python3.11 -m venv .venv
@@ -121,6 +67,57 @@ npm run dev
 
 Open `http://localhost:5173`. During development, Vite proxies `/api` requests
 to FastAPI at `http://localhost:8000`.
+
+## Key features
+
+- Search across Paris hotel reviews using NLP
+- Review chunking and SBERT embeddings
+- Cosine-similarity retrieval backed by Qdrant
+- Persistent local indexes with optional remote Qdrant support
+- FastAPI search endpoint with an OpenAPI contract
+- React and TypeScript frontend with loading and error states
+- CLI tools for ingestion and search
+- Unit tests for search primitives, storage, and the API
+
+## Architecture
+
+```text
+React + TypeScript
+        |
+        | POST /api/search
+        v
+     FastAPI
+        |
+        | Embed query and retrieve nearest vectors
+        v
+      Qdrant <---- Sentence Transformers
+        |
+        v
+Ranked hotel reviews
+```
+
+The browser communicates only with FastAPI. Dataset loading, embedding, vector
+storage, and retrieval remain in the Python backend.
+
+## Technology stack
+
+### Backend
+
+- Python 3.11+
+- FastAPI and Uvicorn
+- Sentence Transformers (`all-MiniLM-L6-v2`)
+- Qdrant
+- Hugging Face Datasets
+- pandas and NumPy
+- pytest and Ruff
+
+### Frontend
+
+- React 19
+- TypeScript
+- Vite
+- TanStack Query
+- CSS
 
 ## API
 
