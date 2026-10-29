@@ -5,8 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from hotel_search_engine.search.embeddings import Embedder
-from hotel_search_engine.search.vectorstore import DEFAULT_COLLECTION, Document, QdrantStore
+from hotel_recommendation_engine.search.embeddings import Embedder
+from hotel_recommendation_engine.search.vectorstore import DEFAULT_COLLECTION, Document, QdrantStore
 
 
 @dataclass(frozen=True)
@@ -15,6 +15,7 @@ class SearchHit:
     score: float
     text: str
     metadata: dict[str, Any]
+    rerank_score: float | None = None
 
 
 class Retriever:
@@ -31,7 +32,7 @@ class Retriever:
         path: str | None = "data/qdrant",
         embedder: Embedder | None = None,
     ) -> Retriever:
-        """Attach to an existing Qdrant collection built by :mod:`hotel_search_engine.ingest`."""
+        """Attach to an existing Qdrant collection built by the ingestion module."""
         embedder = embedder or Embedder()
         store = QdrantStore(
             dimension=embedder.dimension,

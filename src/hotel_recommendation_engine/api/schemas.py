@@ -2,7 +2,7 @@
 
 FastAPI turns these into the OpenAPI schema at ``/openapi.json``; the frontend
 generates its TypeScript types from that. Keep these separate from the internal
-``hotel_search_engine`` dataclasses so the wire format can stay stable while the
+``hotel_recommendation_engine`` dataclasses so the wire format can stay stable while the
 implementation changes. Any edit here affects both sides -- review accordingly.
 """
 

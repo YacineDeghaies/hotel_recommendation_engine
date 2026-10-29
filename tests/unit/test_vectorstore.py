@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from hotel_search_engine.search.similarity import l2_normalize
-from hotel_search_engine.search.vectorstore import Document, QdrantStore
+from hotel_recommendation_engine.search.similarity import l2_normalize
+from hotel_recommendation_engine.search.vectorstore import Document, QdrantStore
 
 
 def _corpus():

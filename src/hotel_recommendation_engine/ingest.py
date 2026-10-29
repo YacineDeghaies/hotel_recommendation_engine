@@ -3,20 +3,20 @@
 Run once, offline, before serving queries:
 
     # embedded Qdrant, persisted to ./data/qdrant
-    python -m hotel_search_engine.ingest --locality Paris
+    python -m hotel_recommendation_engine.ingest --locality Paris
 
     # against a running Qdrant server
-    python -m hotel_search_engine.ingest --locality Paris --qdrant-url http://localhost:6333
+    python -m hotel_recommendation_engine.ingest --locality Paris --qdrant-url http://localhost:6333
 """
 
 from __future__ import annotations
 
 import argparse
 
-from hotel_search_engine.data import load_reviews
-from hotel_search_engine.search.chunking import chunk_text
-from hotel_search_engine.search.embeddings import Embedder
-from hotel_search_engine.search.vectorstore import DEFAULT_COLLECTION, Document, QdrantStore
+from hotel_recommendation_engine.data import load_reviews
+from hotel_recommendation_engine.search.chunking import chunk_text
+from hotel_recommendation_engine.search.embeddings import Embedder
+from hotel_recommendation_engine.search.vectorstore import DEFAULT_COLLECTION, Document, QdrantStore
 
 DEFAULT_QDRANT_PATH = "data/qdrant"
 

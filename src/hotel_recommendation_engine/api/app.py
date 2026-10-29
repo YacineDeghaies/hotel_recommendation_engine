@@ -2,7 +2,7 @@
 
 Run from the repo root:
 
-    uvicorn hotel_search_engine.api.app:app --reload
+    uvicorn hotel_recommendation_engine.api.app:app --reload
 
 - Interactive docs:      http://localhost:8000/docs
 - Machine-readable spec:  http://localhost:8000/openapi.json  (frontend generates
@@ -21,7 +21,7 @@ from typing import Annotated
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from hotel_search_engine.api.schemas import (
+from hotel_recommendation_engine.api.schemas import (
     AskRequest,
     AskResponse,
     Citation,
@@ -30,9 +30,10 @@ from hotel_search_engine.api.schemas import (
     SearchRequest,
     SearchResponse,
 )
-from hotel_search_engine.search.aggregation import aggregate_by_hotel
-from hotel_search_engine.search.retriever import Retriever
-from hotel_search_engine.search.vectorstore import DEFAULT_COLLECTION
+from hotel_recommendation_engine.search.aggregation import aggregate_by_hotel
+from hotel_recommendation_engine.search.reranker import Reranker
+from hotel_recommendation_engine.search.retriever import Retriever
+from hotel_recommendation_engine.search.vectorstore import DEFAULT_COLLECTION
 
 API_VERSION = "0.1.0"
 SEARCH_CANDIDATE_MULTIPLIER = 5
@@ -73,6 +74,15 @@ def get_retriever() -> Retriever:
 RetrieverDependency = Annotated[Retriever, Depends(get_retriever)]
 
 
+@lru_cache(maxsize=1)
+def get_reranker() -> Reranker:
+    """Load the cross-encoder once on the first search request."""
+    return Reranker()
+
+
+RerankerDependency = Annotated[Reranker, Depends(get_reranker)]
+
+
 # --------------------------------------------------------------------------- #
 # Routes
 # --------------------------------------------------------------------------- #
@@ -83,11 +93,13 @@ def health() -> HealthResponse:
 
 
 @app.post("/api/search", response_model=SearchResponse, tags=["search"])
-def search(req: SearchRequest, retriever: RetrieverDependency) -> SearchResponse:
+def search(
+    req: SearchRequest, retriever: RetrieverDependency, reranker: RerankerDependency
+) -> SearchResponse:
     """Return the best matching review from each of the top-ranked hotels."""
     candidate_count = min(req.k * SEARCH_CANDIDATE_MULTIPLIER, MAX_SEARCH_CANDIDATES)
     review_hits = retriever.search(req.query, k=candidate_count)
-    hotel_hits = aggregate_by_hotel(review_hits, limit=req.k)
+    hotel_hits = aggregate_by_hotel(reranker.rerank(req.query, review_hits), limit=req.k)
 
     hits = [
         ReviewHit(
@@ -110,7 +122,7 @@ def ask(req: AskRequest) -> AskResponse:
     """Retrieve context, then return a generated answer grounded in it.
 
     STUB: retrieve top-k reviews, then call the (not yet written)
-    `hotel_search_engine.generator` which prompts Claude and returns an answer + citations.
+    `hotel_recommendation_engine.generator` which prompts Claude and returns an answer + citations.
     """
     return AskResponse(
         query=req.query,

@@ -54,7 +54,7 @@ The API and frontend group matches by hotel.
 ### 4. Start the API
 
 ```bash
-uvicorn hotel_search_engine.api.app:app --reload
+uvicorn hotel_recommendation_engine.api.app:app --reload
 ```
 
 The API is available at `http://localhost:8000`. Interactive documentation is
@@ -80,10 +80,11 @@ to FastAPI at `http://localhost:8000`.
 ## Key features
 
 - Search across Paris hotel reviews using natural language
-- Unique hotel results in the API and frontend, ranked by their best review match
+- Unique hotel results in the API and frontend, reranked by a cross-encoder
 - Semantic matching beyond exact keywords
 - Review chunking and SBERT embeddings
 - Cosine-similarity retrieval backed by Qdrant
+- Cross-encoder reranking of retrieved review passages
 - Persistent local indexes with optional remote Qdrant support
 - FastAPI search endpoint with an OpenAPI contract
 - React and TypeScript frontend with loading and error states
@@ -103,6 +104,7 @@ React + TypeScript
         v
       Qdrant <---- Sentence Transformers
         |
+        | Rerank candidate passages with a cross-encoder
         v
 Ranked hotels with matching review passages
 ```
@@ -110,13 +112,19 @@ Ranked hotels with matching review passages
 The browser communicates only with FastAPI. Dataset loading, embedding, vector
 storage, and retrieval remain in the Python backend.
 
+The reranking stage follows the query-passage cross-encoder approach described in
+Nogueira and Cho's [*Passage Re-ranking with BERT*](https://arxiv.org/abs/1901.04085).
+The implementation uses the [MS MARCO MiniLM-L6-v2 cross-encoder](https://huggingface.co/cross-encoder/ms-marco-MiniLM-L6-v2),
+not the BERT model evaluated in that paper.
+
 ## Technology stack
 
 ### Backend
 
 - Python 3.11+
 - FastAPI and Uvicorn
-- Sentence Transformers (`all-MiniLM-L6-v2`)
+- Sentence Transformers (`all-MiniLM-L6-v2` for retrieval and
+  `cross-encoder/ms-marco-MiniLM-L6-v2` for reranking)
 - Qdrant
 - Hugging Face Datasets
 - pandas and NumPy
@@ -164,12 +172,15 @@ Illustrative response (actual results depend on the indexed reviews):
 
 `query` is required and must contain search text. `k` defaults to `5` and accepts
 values from `1` to `50`. The API retrieves up to five times `k` review candidates
-(at most 250), keeps the highest-scoring passage per hotel, and returns up to `k`
-hotels. Fewer results are possible when candidates belong to the same hotels.
+(at most 250), reranks them with a cross-encoder, keeps the strongest reranked
+passage per hotel, and returns up to `k` hotels. Fewer results are possible when
+candidates belong to the same hotels. The cross-encoder model downloads on the
+first search request and is cached for later requests.
 
 The optional `locality` request field is currently ignored; choose the locality
-when building the index. Scores represent cosine similarity, not calibrated
-recommendation probabilities. `/api/health` reports API availability without
+when building the index. The returned `score` is the original cosine similarity;
+result order follows the cross-encoder's relevance scores. Neither score is a
+calibrated recommendation probability. `/api/health` reports API availability without
 checking the index, and `/api/ask` currently returns a fixed placeholder response.
 
 ## Configuration
@@ -197,7 +208,7 @@ run local commands from the repository root so relative paths resolve consistent
 ```text
 hotel-search-engine/
 ├── frontend/                       # React and TypeScript application
-├── src/hotel_search_engine/
+├── src/hotel_recommendation_engine/
 │   ├── api/                        # FastAPI routes and schemas
 │   ├── search/                     # Chunking, embeddings, retrieval, and Qdrant
 │   ├── data.py                     # Dataset loading and cleaning
@@ -208,8 +219,8 @@ hotel-search-engine/
 └── README.md
 ```
 
-The installable project name is `hotel-search-engine`. Python imports use
-`hotel_search_engine` because Python module names cannot contain hyphens.
+The installable project name is `hotel-recommendation-engine`. Python imports use
+`hotel_recommendation_engine` because Python module names cannot contain hyphens.
 
 ## Development
 

@@ -9,7 +9,7 @@ from __future__ import annotations
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
-from hotel_search_engine.search.similarity import l2_normalize
+from hotel_recommendation_engine.search.similarity import l2_normalize
 
 DEFAULT_MODEL = "all-MiniLM-L6-v2"
 

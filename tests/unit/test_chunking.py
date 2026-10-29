@@ -1,6 +1,6 @@
 import pytest
 
-from hotel_search_engine.search.chunking import chunk_text
+from hotel_recommendation_engine.search.chunking import chunk_text
 
 
 def test_short_text_is_single_chunk():

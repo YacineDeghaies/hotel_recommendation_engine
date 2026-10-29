@@ -15,7 +15,7 @@ export function SearchResults({ hits }: SearchResultsProps) {
         <li className="result" key={`${hit.hotel_name}-${index}`}>
           <div className="result-heading">
             <h2>{hit.hotel_name}</h2>
-            <span>{Math.round(hit.score * 100)}% match</span>
+            <span>Similarity {hit.score.toFixed(2)}</span>
           </div>
           <p>{hit.review}</p>
         </li>

@@ -1,7 +1,9 @@
+import pytest
 from fastapi.testclient import TestClient
 
-from hotel_search_engine.api.app import app, get_retriever
-from hotel_search_engine.search.retriever import SearchHit
+from hotel_recommendation_engine.api.app import app, get_reranker, get_retriever
+from hotel_recommendation_engine.search.reranker import Reranker
+from hotel_recommendation_engine.search.retriever import SearchHit
 
 
 class FakeRetriever:
@@ -19,6 +21,27 @@ class FakeRetriever:
     def search(self, query: str, k: int = 5) -> list[SearchHit]:
         self.calls.append((query, k))
         return self.results[:k]
+
+
+class FakeCrossEncoder:
+    def __init__(self, scores: list[float]) -> None:
+        self.scores = scores
+        self.pairs: list[tuple[str, str]] = []
+
+    def predict(self, pairs: list[tuple[str, str]], batch_size: int) -> list[float]:
+        self.pairs = pairs
+        return self.scores
+
+
+@pytest.fixture(autouse=True)
+def fake_reranker() -> None:
+    class IdentityReranker:
+        def rerank(self, query: str, hits: list[SearchHit]) -> list[SearchHit]:
+            return hits
+
+    app.dependency_overrides[get_reranker] = lambda: IdentityReranker()
+    yield
+    app.dependency_overrides.clear()
 
 
 def test_search_returns_real_retriever_results() -> None:
@@ -86,3 +109,30 @@ def test_search_returns_each_hotel_only_once() -> None:
     assert retriever.calls == [("quiet hotel", 10)]
     assert [hit["hotel_name"] for hit in response.json()["hits"]] == ["Hotel A", "Hotel B"]
     assert response.json()["hits"][0]["review"] == "Best Hotel A review"
+
+
+def test_search_reranks_passages_before_grouping_hotels() -> None:
+    retriever = FakeRetriever(
+        [
+            SearchHit("a-1", 0.95, "Weak Hotel A review", {"hotel_name": "Hotel A"}),
+            SearchHit("a-2", 0.90, "Strong Hotel A review", {"hotel_name": " hotel a "}),
+            SearchHit("b-1", 0.85, "Hotel B review", {"hotel_name": "Hotel B"}),
+        ]
+    )
+    model = FakeCrossEncoder([0.1, 0.9, 0.7])
+    app.dependency_overrides[get_retriever] = lambda: retriever
+    app.dependency_overrides[get_reranker] = lambda: Reranker(model=model)
+
+    response = TestClient(app).post("/api/search", json={"query": "quiet hotel", "k": 2})
+
+    assert response.status_code == 200
+    assert model.pairs == [
+        ("quiet hotel", "Weak Hotel A review"),
+        ("quiet hotel", "Strong Hotel A review"),
+        ("quiet hotel", "Hotel B review"),
+    ]
+    assert [(hit["hotel_name"].strip(), hit["review"], hit["score"])
+            for hit in response.json()["hits"]] == [
+        ("hotel a", "Strong Hotel A review", 0.90),
+        ("Hotel B", "Hotel B review", 0.85),
+    ]
