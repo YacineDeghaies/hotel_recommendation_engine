@@ -8,12 +8,6 @@ def chunk_text(
     chunk_size: int = 512,
     overlap_size: int = 64,
 ) -> list[str]:
-    """Break ``text`` into windows of ``chunk_size`` chars overlapping by ``overlap``.
-
-    Whitespace is collapsed first. Text shorter than ``chunk_size`` is returned as a
-    single chunk; empty text yields an empty list. The trailing window is skipped
-    when its content is already fully contained in the previous chunk.
-    """
     if chunk_size <= 0:
         raise ValueError("chunk_size must be positive")
     if not 0 <= overlap_size < chunk_size:

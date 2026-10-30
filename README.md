@@ -11,7 +11,6 @@ passage for each hotel, along with its similarity score.
 
 - Python 3.11 or newer
 - Node.js and npm
-- Internet access during the initial dataset and model download
 
 ### 1. Install the backend
 
@@ -25,12 +24,6 @@ python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
 ```
 
-On Windows PowerShell, activate the environment with:
-
-```powershell
-.venv\Scripts\Activate.ps1
-```
-
 ### 2. Build the search index
 
 ```bash
@@ -42,7 +35,7 @@ Qdrant index to `data/qdrant`. Both downloads are cached for subsequent runs.
 Ingestion recreates the selected collection by default; use `--no-recreate` to
 upsert into an existing collection.
 
-### 3. Verify search from the command line
+### 3. Verify search from the CLI
 
 ```bash
 hotel-search-engine-search "a quiet hotel near the Louvre" -k 5
@@ -246,10 +239,18 @@ The ingestion pipeline defaults to Paris, removes empty reviews,
 splits reviews into overlapping passages, and embeds them with
 `sentence-transformers/all-MiniLM-L6-v2`.
 
-Generated indexes and downloaded data are not committed to Git.
+## Planned search quality evaluation
+
+The next feature is a reproducible evaluation dashboard for hotel search. It will
+use a fixed set of realistic queries with human-labeled relevant hotels to compare
+vector search alone against vector search followed by the cross-encoder reranker.
+The report should show Recall@5, ranking quality, and search latency for both
+versions, plus examples where reranking improves or worsens the results. These
+measurements are not implemented yet.
 
 ## Roadmap
 
+- Build the labeled query set and search quality evaluation dashboard
 - Add an end-to-end ingestion test
 - Implement grounded answer generation behind `/api/ask`
 - Generate frontend types from the OpenAPI schema
